@@ -42,3 +42,13 @@ outputs/
 .idea/
 .vscode/
 .DS_Store
+
+# AI workspace local secrets and runtime
+.claude/
+.codex/
+.ai/local/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
