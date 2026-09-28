@@ -61,7 +61,18 @@ Possible follow-ups the user may want (none started):
 5. Aggregate visualizations (per-scene top-1 success-rate bar chart) if a summary
    figure is wanted.
 
-### Benchmark code + data locations (all OUTSIDE this repo)
+### Benchmark code — NOW IN-REPO at `benchmarks/suctionnet_comparison/`
+Consolidated into the repo (2026-09-28) so it moves between PCs with the repo.
+Portable via `config.py` (paths from `GRASPNET_ROOT` env var etc.; no hardcoded
+`~/Desktop/...`). Vendored + numpy-patched `suctionnetAPI` under its `third_party/`.
+Both conda env specs in `envs/`. Representative galleries in `results/`. Large
+data/predictions are gitignored (regenerated per machine). See its `README.md`
+for the new-PC setup + run commands. On THIS machine, set
+`GRASPNET_ROOT=~/Desktop/Codes/graspnet_dataset` and
+`S2G_BENCH_PREDS=~/Desktop/Codes/s2g_suctionnet_bench/preds_full` to reuse the
+already-generated data.
+
+### Original scratch working dir (this machine only, NOT committed)
 - Bench working dir: `~/Desktop/Codes/s2g_suctionnet_bench/`
   - `graspnet_loader.py` — GraspNet depth → organized mm cloud + intrinsics.
   - `s2g_infer.py` — Seg2Grasp → suctionnetAPI dump adapter; one GPU pass writes
@@ -146,7 +157,16 @@ Append one entry per work boundary, most recent last.
 - **2026-09-28 — claude (Opus 4.8):** Built qualitative visualizations overlaying
   both methods' suctions on GraspNet RGB (`viz_compare.py` score-colored;
   `viz_gt.py`/`viz_gt3.py` GT-quality colored, per-point pass/fail from the
-  official scorer). Confirmed the visuals match the quantitative story. Then
-  organized this HANDOFF checkpoint for the user's git commit. Noted that
-  `AGENTS.md`/`CLAUDE.md`/`.gitignore` additions are the user's own scaffolding
-  (preserved, not created here); Seg2Grasp source tree still unmodified (`7c09574`).
+  official scorer). Confirmed the visuals match the quantitative story. Committed
+  `environment.yml` (s2g_seg conda spec) + handoff updates as `6c92b59`, pushed.
+  Noted `AGENTS.md`/`CLAUDE.md`/`.gitignore` are the user's own scaffolding
+  (committed by the user as `0f300cc`); Seg2Grasp source tree still unmodified.
+- **2026-09-28 — claude (Opus 4.8):** Consolidated the whole benchmark INTO the
+  repo at `benchmarks/suctionnet_comparison/` (user goal: one repo, portable to
+  another PC). Made all scripts path-portable via `config.py` (env-var dataset
+  root, standard GraspNet `scenes/` layout, repo-relative Seg2Grasp import),
+  removed the ephemeral scratchpad path, vendored the numpy-patched suctionnetAPI
+  under `third_party/`, added both env specs, a README with new-PC setup, a
+  `.gitignore` for large data, and 3 downscaled result galleries. Smoke-tested
+  all imports + a live 1-frame render through the portable config. 35 files,
+  ~2.9 MB. Ready to commit + push.

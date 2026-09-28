@@ -1,0 +1,12 @@
+# Large data / generated outputs — regenerate per machine, never committed
+graspnet_dataset/
+preds/
+preds_full/
+preds_pilot/
+viz_out/
+*_res.npy
+
+# python
+__pycache__/
+*.pyc
+*.egg-info/
