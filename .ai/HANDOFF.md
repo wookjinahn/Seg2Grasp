@@ -7,8 +7,10 @@ terse; put rationale in `DECISIONS.md` instead of repeating it here.
 
 - **Last agent:** claude (Opus 4.8)
 - **Timestamp:** 2026-09-28T00:22Z
-- **Branch:** main  ·  **HEAD:** `7c09574` (unchanged; only `.ai/` + user
-  scaffolding untracked — see "Repo state" below)
+- **Branch:** main  ·  **HEAD:** `0f300cc` "chore: initialized" (committed the
+  `.ai/` handoff files + the user's `AGENTS.md`/`CLAUDE.md`/`.gitignore`
+  scaffolding). Seg2Grasp source tree still unmodified vs the `7c09574` release.
+  Uncommitted after that commit: this HANDOFF edit + new `environment.yml`.
 
 ## Current state
 
@@ -22,14 +24,15 @@ GraspNet/SuctionNet-1Billion dataset, scored by the official `suctionnetAPI`.
 Result: **Seg2Grasp wins on both AP_top1 and AP_top50** (full table in
 `DECISIONS.md`). Side-by-side and GT-scored visualizations produced.
 
-**Repo state / what to commit:** `HEAD` is still `7c09574`; the Seg2Grasp source
-tree was NOT modified at any point. Untracked/modified in the working tree:
-- `.ai/` (HANDOFF.md, DECISIONS.md) — intended to be committed.
-- `AGENTS.md`, `CLAUDE.md`, and the `.gitignore` additions (`.claude/`,
-  `.codex/`, `.ai/local/`, secrets) — the user's own workspace-manager
-  scaffolding (NOT created by this session). Preserve; do not revert.
-- All benchmark code + data live OUTSIDE the repo in
-  `~/Desktop/Codes/s2g_suctionnet_bench/` and are not part of this repo's commit.
+**Repo state / what to commit:** the Seg2Grasp source tree was NOT modified at
+any point (still matches the `7c09574` release). Commit `0f300cc` already added
+the `.ai/` handoff files and the user's `AGENTS.md`/`CLAUDE.md`/`.gitignore`
+scaffolding. Added this session but not yet committed:
+- `environment.yml` (repo root) — conda spec of the `s2g_seg` env actually used
+  (conda/sm_89; alternative to the uv/Blackwell `scripts/setup_seg_env.sh`).
+- This HANDOFF edit.
+All benchmark code + data live OUTSIDE the repo in
+`~/Desktop/Codes/s2g_suctionnet_bench/` and are not part of this repo's commit.
 
 **Local machine state (this workstation only, not portable/committed):**
 GPU is an RTX 4060 Ti (16GB, Ada Lovelace / sm_89) — NOT the Blackwell (sm_120)
@@ -77,7 +80,10 @@ Possible follow-ups the user may want (none started):
   dense_point_clouds, seal/collision/wrench labels; a `scenes/` symlink dir was
   created for the API. Depth png = mm, factor_depth 1000).
 - SuctionNet baseline repo: `~/Desktop/Codes/suctionnet-baseline/` (`normal_std/`).
-- Envs: `s2g_seg` (Seg2Grasp/detectron2), `suctionnet_eval` (normal_std + API).
+- Envs: `s2g_seg` (Seg2Grasp/detectron2, py3.10, torch 2.5.1+cu121, detectron2
+  0.6), `suctionnet_eval` (normal_std + API, py3.9, torch 2.8 CPU, transforms3d
+  0.3.1). Reproducible specs exported to `s2g_suctionnet_bench/envs/`:
+  `{s2g_seg,suctionnet_eval}.yml` (full conda export) + `*.pip.txt` (pip freeze).
 - suctionnetAPI clone (read-only ref): in this session's scratchpad dir.
 
 ## Notes for future agents
