@@ -5,6 +5,7 @@ preds_full/
 preds_pilot/
 viz_out/
 *_res.npy
+checkpoints/
 
 # python
 __pycache__/

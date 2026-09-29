@@ -5,24 +5,30 @@ work boundary (before ending a session, before a risky change, or when you pause
 mid-task) so the next agent can resume without re-deriving context. Keep entries
 terse; put rationale in `DECISIONS.md` instead of repeating it here.
 
-- **Last agent:** claude (Opus 4.8)
-- **Timestamp:** 2026-09-28T00:22Z
-- **Branch:** main  ·  **HEAD:** `0f300cc` "chore: initialized" (committed the
-  `.ai/` handoff files + the user's `AGENTS.md`/`CLAUDE.md`/`.gitignore`
-  scaffolding). Seg2Grasp source tree still unmodified vs the `7c09574` release.
-  Uncommitted after that commit: this HANDOFF edit + new `environment.yml`.
+- **Last agent:** claude (Sonnet 5)
+- **Timestamp:** 2026-09-29T01:00Z
+- **Branch:** main  ·  **HEAD:** `2034263` "add SuctionNet comparison benchmark
+  (portable, in-repo)". Seg2Grasp source tree still unmodified vs the `7c09574`
+  release. Uncommitted at end of session: `.ai/DECISIONS.md`/`.ai/HANDOFF.md`
+  updates + the new learned-model consolidation under
+  `benchmarks/suctionnet_comparison/` (see checkpoint log below) — about to be
+  committed per user instruction ("학습 모델 벤치마크도 리포에 통합 후 커밋").
 
 ## Current state
 
 Seg2Grasp (IROS 2024) public code release: a modular suction bin-picking
 pipeline (segmentation → grasping → classification).
 
-**Work done this session:** built a local segmentation+grasping env, verified the
-bundled demo, then ran a full quantitative + qualitative comparison of
-Seg2Grasp's analytic suction planner vs SuctionNet's `normal_std` baseline on the
-GraspNet/SuctionNet-1Billion dataset, scored by the official `suctionnetAPI`.
-Result: **Seg2Grasp wins on both AP_top1 and AP_top50** (full table in
-`DECISIONS.md`). Side-by-side and GT-scored visualizations produced.
+**Work done across sessions:** built a local segmentation+grasping env, verified
+the bundled demo, then ran a full quantitative + qualitative comparison of
+Seg2Grasp's analytic suction planner vs SuctionNet's `normal_std` baseline (both
+training-free) on the GraspNet/SuctionNet-1Billion dataset, scored by the
+official `suctionnetAPI`: **Seg2Grasp wins on both AP_top1 and AP_top50** (table
+in `DECISIONS.md`). Then added SuctionNet's **learned** DeepLabV3+ RGB-D model
+(supervised, pretrained realsense weights) as a 4th arm on the same eval: it
+roughly **doubles** Seg2Grasp on test_seen (expected — in-distribution supervised
+model). Full 4-way table + verdict in `DECISIONS.md` (2026-09-28 entries). Side-
+by-side and GT-scored visualizations produced for the training-free pair.
 
 **Repo state / what to commit:** the Seg2Grasp source tree was NOT modified at
 any point (still matches the `7c09574` release). Commit `0f300cc` already added
@@ -45,21 +51,29 @@ scope on this machine). `libero` env untouched.
 
 ## Next steps
 
-The benchmark comparison (test_seen, realsense) and its visualizations are
-**complete** — see checkpoint log + `DECISIONS.md` (2026-09-27 "FULL benchmark
-results"). Nothing is in-progress or blocked.
+The training-free comparison (Seg2Grasp vs normal_std, test_seen, realsense) and
+its visualizations are **complete**, and the learned-model 4-way comparison
+(test_seen, realsense) is also **complete** — see checkpoint log + `DECISIONS.md`
+(2026-09-27 "FULL benchmark results", 2026-09-28 "Added SuctionNet LEARNED
+model"). Nothing is in-progress or blocked; the only loose end is that the
+DECISIONS.md entry for the learned-model run was uncommitted at the start of
+this session (now reconciled with this HANDOFF, still uncommitted — ask user).
 
 Possible follow-ups the user may want (none started):
 1. **test_similar / test_novel** splits — Seg2Grasp's *claimed* generalization
-   strength (paper's Hard column); the most interesting next test. Data for these
-   splits is NOT downloaded yet (only `test_seen.zip` was provided).
+   strength (paper's Hard column), and now also **the discriminating test**
+   against the learned model (does its edge survive on unseen objects, or is it
+   an in-distribution artifact?). Data for these splits is NOT downloaded yet
+   (only `test_seen.zip` was provided). This is the most interesting next step.
 2. **kinect** camera (only realsense measured so far).
-3. Learned SuctionNet baseline (DeepLabV3+/ConvNet) — needs Google-Drive weights
-   + old-torch env.
+3. ~~Learned SuctionNet baseline~~ — **done** (2026-09-28, DeepLabV3+ RGB-D,
+   test_seen only; see DECISIONS.md). Its code is now also consolidated in-repo
+   (2026-09-29, see below) — the numbers themselves came from the external run
+   and were not re-generated through the in-repo script.
 4. Resolve `suction_nms` properly (currently a faithful numpy fallback) before
    publishing any numbers.
 5. Aggregate visualizations (per-scene top-1 success-rate bar chart) if a summary
-   figure is wanted.
+   figure is wanted; also none yet for the learned-model arm.
 
 ### Benchmark code — NOW IN-REPO at `benchmarks/suctionnet_comparison/`
 Consolidated into the repo (2026-09-28) so it moves between PCs with the repo.
@@ -70,7 +84,11 @@ data/predictions are gitignored (regenerated per machine). See its `README.md`
 for the new-PC setup + run commands. On THIS machine, set
 `GRASPNET_ROOT=~/Desktop/Codes/graspnet_dataset` and
 `S2G_BENCH_PREDS=~/Desktop/Codes/s2g_suctionnet_bench/preds_full` to reuse the
-already-generated data.
+already-generated data. Also now includes the learned SuctionNet model
+(DeepLabV3+/ConvNet, `third_party/suctionnet_neural_network/` +
+`suctionnet_nn_infer.py`, consolidated 2026-09-29) — set
+`SUCTIONNET_NN_CHECKPOINT` to reuse the checkpoint at
+`~/Desktop/Codes/s2g_suctionnet_bench/checkpoints/realsense-deeplabplus-RGBD`.
 
 ### Original scratch working dir (this machine only, NOT committed)
 - Bench working dir: `~/Desktop/Codes/s2g_suctionnet_bench/`
@@ -169,4 +187,35 @@ Append one entry per work boundary, most recent last.
   under `third_party/`, added both env specs, a README with new-PC setup, a
   `.gitignore` for large data, and 3 downscaled result galleries. Smoke-tested
   all imports + a live 1-frame render through the portable config. 35 files,
-  ~2.9 MB. Ready to commit + push.
+  ~2.9 MB. Committed + pushed as `2034263`.
+- **2026-09-28 — claude (Opus 4.8):** Ran SuctionNet's learned DeepLabV3+ RGB-D
+  model (external `suctionnet-baseline/neural_network/`, new
+  `suctionnet_nn_infer.py`; compat fix `torchvision.models.utils`→`torch.hub`
+  across 6 backbone files) through the same official suctionnetAPI eval,
+  test_seen/realsense. Result: learned model roughly doubles Seg2Grasp on both
+  AP_top1/AP_top50 (expected, in-distribution supervised advantage; AP_top50
+  matches the SuctionNet paper's own reported number, confirming the pipeline).
+  Recorded as a 4-way table in `DECISIONS.md`. **Not consolidated into the
+  in-repo `benchmarks/suctionnet_comparison/`** (still lives only in the
+  external scratch repo) and the DECISIONS.md entry was left uncommitted.
+- **2026-09-29 — claude (Sonnet 5):** Startup handoff read. Found the
+  2026-09-28 learned-model DECISIONS.md entry uncommitted and this HANDOFF not
+  yet reflecting it (Next steps still listed the learned baseline as
+  not-started). Reconciled HANDOFF (current state, Next steps, this log) with
+  DECISIONS.md; no code or benchmark changes yet. Asked the user how to
+  proceed; they chose "consolidate the learned-model benchmark into the repo,
+  then commit."
+- **2026-09-29 — claude (Sonnet 5):** Consolidated the learned SuctionNet model
+  (DeepLabV3+/ConvNet RGB-D) into `benchmarks/suctionnet_comparison/`, matching
+  the pattern already used for normal_std/suctionnetAPI: vendored
+  `DeepLabV3Plus/` + `ConvNet/` (236 KB, carrying the existing 6-file
+  `torch.hub` compat patch) under `third_party/suctionnet_neural_network/`;
+  added a portable `suctionnet_nn_infer.py` (uses `config.py`, new
+  `SUCTIONNET_NN_CHECKPOINT` env var, same dump contract as the other two
+  infer scripts so `full_eval.py` needs no changes); gitignored `checkpoints/`
+  (weights not committed, ~700 MB); updated `README.md` (4-way results table,
+  layout, setup step 6, run step 2b, attribution) and added a DECISIONS.md
+  entry. Smoke-tested: vendored `DeepLabV3Plus.network`/`ConvNet` import and
+  build in `suctionnet_eval` conda env; new script's CLI runs correctly up to
+  the (expected) missing-checkpoint error — no live GPU inference/eval re-run
+  (the 2026-09-28 numbers stand as-is). Ready to commit.

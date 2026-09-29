@@ -8,6 +8,10 @@ variables, so the benchmark moves between machines without code edits:
     S2G_BENCH_PREDS where prediction dumps are written/read  (default: <bench>/preds_full)
     S2G_BENCH_VIZ   where rendered figures go                (default: <bench>/viz_out)
     GRASPNET_CAMERA realsense | kinect                       (default: realsense)
+    SUCTIONNET_NN_CHECKPOINT
+                    path to the learned SuctionNet (DeepLabV3+ RGB-D) checkpoint
+                    (default: <bench>/checkpoints/realsense-deeplabplus-RGBD) —
+                    NOT committed, see README for the Google-Drive source.
 
 The GraspNet dataset itself is large and NOT committed — point GRASPNET_ROOT at
 wherever it lives on the current machine (see README). The Seg2Grasp package is
@@ -23,3 +27,9 @@ SCENES_DIR = os.path.join(GRASPNET_ROOT, "scenes")       # standard GraspNet lay
 PREDS_ROOT = os.environ.get("S2G_BENCH_PREDS", os.path.join(BENCH_DIR, "preds_full"))
 VIZ_ROOT = os.environ.get("S2G_BENCH_VIZ", os.path.join(BENCH_DIR, "viz_out"))
 CAMERA = os.environ.get("GRASPNET_CAMERA", "realsense")
+
+NN_THIRD_PARTY = os.path.join(BENCH_DIR, "third_party", "suctionnet_neural_network")
+NN_CHECKPOINT = os.environ.get(
+    "SUCTIONNET_NN_CHECKPOINT",
+    os.path.join(BENCH_DIR, "checkpoints", "realsense-deeplabplus-RGBD"),
+)

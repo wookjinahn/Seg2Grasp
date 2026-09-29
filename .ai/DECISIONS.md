@@ -234,3 +234,73 @@ strength) are not yet measured. (3) Classification (Qwen) is not part of this �
 grasping only. Raw per-scene results saved at
 `~/Desktop/Codes/s2g_suctionnet_bench/preds_full/*_res.npy` (shape 30×256×50×4)
 for re-aggregation without re-evaluating.
+
+---
+
+## 2026-09-28 — Added SuctionNet LEARNED model (DeepLabV3+ RGB-D); full 4-way table
+
+Ran SuctionNet's supervised DeepLabV3+ RGB-D model (pretrained realsense weights,
+Google-Drive id `18TbctdhpNXEKLYDWFzI9cT1Wnhe-tn9h`, `--model deeplabv3plus_resnet101`
+with a 4-channel RGBD backbone; state_dict confirms conv1 = 64×4×7×7, epoch 71)
+through `neural_network/inference.py` (compat fix: `torchvision.models.utils` →
+`torch.hub` for `load_state_dict_from_url` across 6 backbone files; new
+`suctionnet_nn_infer.py` adds `--scenes/--frames`). Same suctionnetAPI eval.
+Numbers independently re-aggregated from the raw res arrays.
+
+| Method | AP_top1 | AP_top50 | top1 per-thr [0.2/0.4/0.6/0.8] |
+|---|---|---|---|
+| SuctionNet normal_std (analytic) | 0.1540 | 0.1010 | 0.314/0.188/0.095/0.018 |
+| **SuctionNet DeepLabV3+ (learned RGB-D)** | **0.4625** | **0.2826** | 0.707/0.629/0.422/0.092 |
+| Seg2Grasp (committed) | 0.2055 | 0.1204 | 0.342/0.269/0.169/0.042 |
+| Seg2Grasp (bestscore) | 0.1503 | 0.1188 | 0.251/0.203/0.119/0.029 |
+
+**Verdict on the seen split:** ranking is **learned SuctionNet ≫ Seg2Grasp
+(committed) > normal_std ≈ Seg2Grasp (bestscore)**. The learned model roughly
+DOUBLES Seg2Grasp on both AP_top1 (2.2×) and AP_top50 (2.3×). This is expected and
+in-distribution: it is a supervised model evaluated on its own dataset's *seen*
+objects — the setting most favorable to it (AP_top50 0.283 matches the paper's
+~0.28 for RGB-D/seen, confirming the pipeline). Seg2Grasp still clearly beats the
+analytic SuctionNet baseline.
+
+**The discriminating test is `test_novel`** (Seg2Grasp's claimed strength: analytic
+grasping generalizes to unseen objects while a supervised model may drop). That
+split's data is NOT downloaded yet — the seen result alone does not settle the
+overall "which is better" question; it only shows the learned model dominates
+in-distribution.
+
+---
+
+## 2026-09-29 — Consolidated the learned SuctionNet model INTO the repo
+
+**Context:** the 2026-09-28 learned-model run above happened entirely in the
+external scratch repo (`~/Desktop/Codes/suctionnet-baseline/neural_network/`),
+unlike the training-free pair which was already consolidated into
+`benchmarks/suctionnet_comparison/` (2026-09-28, commit `2034263`). User asked to
+finish the same consolidation for this arm before committing.
+
+**Decision:** vendored `DeepLabV3Plus/` + `ConvNet/` (the model code, 236 KB, 20
+files) under `benchmarks/suctionnet_comparison/third_party/suctionnet_neural_network/`,
+carrying over the existing local patch (6 backbone files:
+`torchvision.models.utils.load_state_dict_from_url` → `torch.hub.load_state_dict_from_url`,
+required because the former was removed from modern torchvision). Added a
+portable adapter `suctionnet_nn_infer.py` at the benchmark root — a rewrite of
+`neural_network/inference.py` using `config.py` for paths/checkpoint (new
+`SUCTIONNET_NN_CHECKPOINT` env var, default `<bench>/checkpoints/realsense-deeplabplus-RGBD`),
+same dump contract as `normal_std_infer.py`/`s2g_infer.py` so it drops into the
+existing `full_eval.py` unchanged. Checkpoint itself (~700 MB, Google-Drive id
+`18TbctdhpNXEKLYDWFzI9cT1Wnhe-tn9h`) is gitignored, NOT committed — same pattern
+as the GraspNet dataset and prediction dumps. Smoke-tested: vendored
+`DeepLabV3Plus.network`/`ConvNet` import and build models cleanly in the
+`suctionnet_eval` conda env, and the new script's CLI runs correctly up to (and
+fails only at) the missing-checkpoint step.
+
+**Why:** keeps the whole 4-arm comparison (normal_std, Seg2Grasp×2, learned
+DeepLabV3+) in one portable, path-independent place per the user's original goal
+for this benchmark directory — otherwise the learned-model numbers in
+`DECISIONS.md`/`README.md` would reference code that only exists on this machine.
+
+**Not done:** no prediction/eval re-run through the new in-repo script (the
+already-recorded 2026-09-28 numbers came from the external-repo run and are
+reused as-is); `run_all_evals.sh` was left as its pre-existing, non-portable,
+training-free-pair-only convenience script rather than extended, to avoid scope
+creep — extend it if the 3-way + learned loop becomes routine.
